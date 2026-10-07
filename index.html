@@ -695,11 +695,12 @@ function cardHTML(it){
       <button class="mini" data-act="copy" data-field="url">复制</button>
     </div>` : ''}
 
-    ${has(it.account) ? `
+        ${has(it.url) ? `
     <div class="row">
-      <span class="k">账号</span>
-      <span class="v">${esc(it.account)}</span>
-      <button class="mini" data-act="copy" data-field="account">复制</button>
+      <span class="k">网址</span>
+      <span class="v">${esc(it.url)}</span>
+      <a href="${esc(normalizeUrl(it.url))}" target="_blank" class="mini" style="background:var(--primary); color:#fff; text-decoration:none; padding:6px 14px; font-weight:bold; flex:0 0 auto;">🌐 前往</a>
+      <button class="mini ghost" data-act="copy" data-field="url">复制</button>
     </div>` : ''}
 
     ${has(it.password) ? `
