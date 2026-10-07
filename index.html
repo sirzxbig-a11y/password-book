@@ -717,7 +717,31 @@ function cardHTML(it){
     </div>` : ''}
   </div>`;
 }
+// 常用网站字典（你可以随意增加或修改）
+const siteDict = {
+    'netflix.com': '网飞 Netflix',
+    'google.com': '谷歌',
+    'taobao.com': '淘宝',
+    'jd.com': '京东',
+    'github.com': 'GitHub',
+    'bilibili.com': '哔哩哔哩',
+    'zhihu.com': '知乎',
+    'weibo.com': '微博'
+};
 
+// 自动根据网址替换标题
+items.forEach(it => {
+    if (it.url) {
+        let domain = it.url.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].toLowerCase();
+        for (let key in siteDict) {
+            if (domain.includes(key)) {
+                it.title = siteDict[key];
+                break;
+            }
+        }
+    }
+});
+  
 function render(){
   if (!unlocked) return;
 
