@@ -700,14 +700,6 @@ function cardHTML(it){
       </div>
     </div>
 
-    ${has(it.url) ? `
-    <div class="row">
-      <span class="k">网址</span>
-      <span class="v">${esc(it.url)}</span>
-      <button class="mini ghost" data-act="open">打开</button>
-      <button class="mini" data-act="copy" data-field="url">复制</button>
-    </div>` : ''}
-
         ${has(it.url) ? `
     <div class="row">
       <span class="k">网址</span>
