@@ -34,6 +34,15 @@
       --shadow:0 2px 10px rgba(0,0,0,.35);
     }
   }
+    .site-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 6px;
+    flex-shrink: 0;
+    display: inline-block;
+  }
 
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; }
@@ -46,9 +55,7 @@
     padding-bottom:calc(110px + env(safe-area-inset-bottom));
     -webkit-font-smoothing:antialiased;
   }
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
   /* ---------- 顶部 ---------- */
   .topbar{
     position:sticky; top:0; z-index:20;
@@ -297,6 +304,9 @@
   }
   .lock-box.shake{ animation:shake .45s; }
 </style>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 </head>
 <body>
 
@@ -676,10 +686,13 @@ function persist(){
 /* ============ 渲染 ============ */
 function cardHTML(it){
   const has = v => v && String(v).trim();
-  return `
+    return `
   <div class="card" data-id="${it.id}">
     <div class="card-head">
-      <div class="title">${esc(it.title) || '未命名'}</div>
+      <div class="title">
+        ${it.url ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(it.url)}&sz=64" class="site-icon" onerror="this.style.display='none'">` : ''}
+        ${esc(it.title) || '未命名'}
+      </div>
       <div class="ops">
         <button class="mini ghost" data-act="copy" data-field="all">全部</button>
         <button class="icon-btn" data-act="edit" aria-label="编辑">✏️</button>
