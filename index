@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="密码本">
+<meta name="theme-color" content="#4f7cff">
+<title>我的密码本</title>
+<style>
+  :root{
+    --bg:#f2f4f9;
+    --card:#ffffff;
+    --text:#171a21;
+    --sub:#7a8194;
+    --line:#eef0f6;
+    --primary:#4f7cff;
+    --primary-soft:#eaf0ff;
+    --danger:#ff4d4f;
+    --shadow:0 2px 10px rgba(23,32,64,.07);
+    --radius:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1218;
+      --card:#181d26;
+      --text:#e8ecf4;
+      --sub:#8b93a7;
+      --line:#252b36;
+      --primary:#6f95ff;
+      --primary-soft:#1e2941;
+      --shadow:0 2px 10px rgba(0,0,0,.35);
+    }
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    overscroll-behavior-y:contain;
+    padding-bottom:calc(110px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  /* ---------- 顶部 ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:var(--bg);
+    padding:calc(12px + env(safe-area-inset-top)) 16px 8px;
+  }
+  .topbar h1{
+    font-size:19px; font-weight:700; margin:0 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .count{
+    font-size:12px; font-weight:500; color:var(--sub);
+    background:var(--card); border-radius:999px; padding:3px 9px;
+  }
+  .lock-change{
+    margin-left:auto; border:0; background:var(--card); color:var(--sub);
+    width:34px; height:34px; border-radius:11px; font-size:15px;
+    cursor:pointer; box-shadow:var(--shadow); line-height:1;
+  }
+  .lock-change:active{ transform:scale(.94); }
+
+  .search{ position:relative; }
+  .search::before{
+    content:''; position:absolute; left:14px; top:50%; width:14px; height:14px;
+    transform:translateY(-50%);
+    background:var(--sub);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M10 2a8 8 0 105.29 14.01l4.35 4.35 1.41-1.41-4.35-4.35A8 8 0 0010 2zm0 2a6 6 0 110 12 6 6 0 010-12z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M10 2a8 8 0 105.29 14.01l4.35 4.35 1.41-1.41-4.35-4.35A8 8 0 0010 2zm0 2a6 6 0 110 12 6 6 0 010-12z'/%3E%3C/svg%3E") center/contain no-repeat;
+    opacity:.6;
+  }
+  .search input{
+    width:100%; height:44px; border-radius:13px;
+    border:1px solid var(--line); background:var(--card); color:var(--text);
+    padding:0 14px 0 38px; font-size:16px; outline:none;
+    -webkit-appearance:none; appearance:none;
+  }
+  .search input:focus{ border-color:var(--primary); }
+
+  /* ---------- 卡片 ---------- */
+  #list{ padding-top:4px; }
+  .card{
+    background:var(--card); border-radius:var(--radius);
+    margin:10px 16px; padding:4px 14px 8px;
+    box-shadow:var(--shadow);
+    animation:pop .18s ease-out;
+  }
+  @keyframes pop{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none;} }
+
+  .card-head{
+    display:flex; align-items:center; gap:8px;
+    padding:10px 0 6px;
+  }
+  .card-head .title{
+    flex:1 1 auto; min-width:0; font-size:16px; font-weight:650;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .ops{ display:flex; align-items:center; gap:2px; flex:0 0 auto; }
+
+  .row{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 0; border-top:1px solid var(--line);
+  }
+  .row .k{ flex:0 0 38px; font-size:12px; color:var(--sub); }
+  .row .v{
+    flex:1 1 auto; min-width:0; font-size:14px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .row .v.pw{ letter-spacing:1.5px; font-family:ui-monospace,Menlo,Consolas,monospace; }
+  .row .v.note{ white-space:pre-wrap; word-break:break-word; line-height:1.5; }
+
+  button{ font-family:inherit; }
+
+  .mini{
+    flex:0 0 auto; border:0; border-radius:9px; cursor:pointer;
+    padding:6px 11px; font-size:12.5px; font-weight:650;
+    background:var(--primary-soft); color:var(--primary);
+    transition:transform .1s, background .15s;
+  }
+  .mini:active{ transform:scale(.94); }
+  .mini.ghost{ background:var(--line); color:var(--sub); }
+  .mini.copied{ background:#22c55e !important; color:#fff !important; }
+
+  .icon-btn{
+    border:0; background:transparent; cursor:pointer;
+    font-size:15px; padding:7px 8px; border-radius:9px;
+    line-height:1; color:var(--sub);
+  }
+  .icon-btn:active{ background:var(--line); }
+
+  .empty{
+    text-align:center; color:var(--sub); font-size:14px;
+    padding:70px 30px; line-height:2;
+  }
+  .empty span{ font-size:12.5px; opacity:.8; }
+
+  /* ---------- 悬浮按钮 ---------- */
+  .fab{
+    position:fixed; right:18px;
+    bottom:calc(24px + env(safe-area-inset-bottom));
+    width:58px; height:58px; border-radius:50%; border:0;
+    background:linear-gradient(135deg,#6b96ff,#3f63e8);
+    color:#fff; font-size:30px; line-height:1;
+    box-shadow:0 8px 22px rgba(79,124,255,.45);
+    z-index:30; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .12s;
+  }
+  .fab:active{ transform:scale(.92); }
+
+  /* ---------- 弹层 ---------- */
+  .mask{
+    position:fixed; inset:0; background:rgba(0,0,0,.42);
+    opacity:0; pointer-events:none; transition:opacity .22s;
+    z-index:40;
+  }
+  .mask.show{ opacity:1; pointer-events:auto; }
+
+  .sheet{
+    position:fixed; left:50%; bottom:0; z-index:50;
+    width:100%; max-width:520px;
+    background:var(--card);
+    border-radius:22px 22px 0 0;
+    padding:8px 18px calc(22px + env(safe-area-inset-bottom));
+    max-height:92vh; overflow-y:auto;
+    transform:translate(-50%,110%);
+    transition:transform .3s cubic-bezier(.32,.72,0,1);
+    box-shadow:0 -8px 30px rgba(0,0,0,.18);
+    -webkit-overflow-scrolling:touch;
+  }
+  .sheet.show{ transform:translate(-50%,0); }
+  .grabber{
+    width:38px; height:4px; border-radius:99px; background:var(--line);
+    margin:6px auto 10px;
+  }
+  .sheet-head{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:16px; font-weight:700; padding-bottom:4px;
+  }
+  .sheet-head button{
+    border:0; background:transparent; font-size:17px; color:var(--sub);
+    padding:6px 8px; border-radius:9px; cursor:pointer;
+  }
+
+  .field{ margin-top:14px; }
+  .field label{
+    display:block; font-size:12.5px; color:var(--sub); margin-bottom:6px;
+  }
+  .field input, .field textarea{
+    width:100%; border:1px solid var(--line); background:var(--bg);
+    color:var(--text); border-radius:12px; padding:12px;
+    font-size:16px; font-family:inherit; outline:none;
+    -webkit-appearance:none; appearance:none;
+  }
+  .field textarea{ resize:vertical; min-height:70px; line-height:1.5; }
+  .field input:focus, .field textarea:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px var(--primary-soft);
+  }
+  .pw-wrap{ position:relative; }
+  .pw-wrap input{ padding-right:48px; }
+  .pw-wrap .eye{
+    position:absolute; right:4px; top:50%; transform:translateY(-50%);
+    border:0; background:transparent; font-size:17px;
+    padding:9px 10px; cursor:pointer; line-height:1;
+  }
+
+  .sheet-btns{ display:flex; gap:10px; margin-top:24px; }
+  .sheet-btns button{
+    flex:1; height:50px; border-radius:14px; border:0;
+    font-size:16px; font-weight:650; cursor:pointer;
+    transition:transform .1s;
+  }
+  .sheet-btns button:active{ transform:scale(.98); }
+  #cancelBtn{ background:var(--line); color:var(--text); }
+  #saveBtn{ background:var(--primary); color:#fff; }
+
+  /* ---------- 提示 ---------- */
+  .toast{
+    position:fixed; left:50%;
+    bottom:calc(100px + env(safe-area-inset-bottom));
+    transform:translate(-50%,10px);
+    background:rgba(25,30,42,.93); color:#fff;
+    font-size:13.5px; padding:10px 18px; border-radius:12px;
+    opacity:0; pointer-events:none; transition:.22s;
+    z-index:120; max-width:82vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  /* ---------- 锁屏 ---------- */
+  .lock-screen{
+    position:fixed; inset:0; z-index:100;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(79,124,255,.16), transparent 60%),
+      var(--bg);
+    opacity:0; pointer-events:none; transition:opacity .25s;
+    overflow-y:auto;
+  }
+  .lock-screen.show{ opacity:1; pointer-events:auto; }
+
+  .lock-box{
+    width:100%; max-width:330px;
+    background:var(--card);
+    border-radius:22px; padding:28px 22px 22px;
+    box-shadow:0 12px 40px rgba(23,32,64,.16);
+    text-align:center;
+  }
+  .lock-icon{ font-size:34px; line-height:1; }
+  .lock-box h2{ font-size:19px; margin:16px 0 6px; font-weight:700; }
+  .lock-sub{
+    font-size:13px; color:var(--sub); margin:0 0 4px; line-height:1.5;
+  }
+  .lock-field{ margin-top:12px; }
+  .lock-field input{
+    width:100%; height:50px; border-radius:13px; border:1px solid var(--line);
+    background:var(--bg); color:var(--text); font-size:16px; padding:0 14px;
+    outline:none; -webkit-appearance:none; appearance:none;
+  }
+  .lock-field input:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px var(--primary-soft);
+  }
+  .lock-error{
+    min-height:18px; margin-top:10px; font-size:12.5px;
+    color:var(--danger); line-height:1.4;
+  }
+  .lock-btn{
+    width:100%; height:50px; margin-top:8px; border:0; border-radius:14px;
+    background:var(--primary); color:#fff; font-size:16px; font-weight:650;
+    cursor:pointer; transition:transform .1s, opacity .15s;
+  }
+  .lock-btn:active{ transform:scale(.98); }
+  .lock-btn:disabled{ opacity:.6; }
+  .lock-link{
+    display:block; width:100%; margin-top:12px; border:0; background:transparent;
+    color:var(--sub); font-size:13px; cursor:pointer; padding:6px;
+  }
+  .lock-link:active{ opacity:.6; }
+
+  @keyframes shake{
+    10%,90%{ transform:translateX(-2px); }
+    20%,80%{ transform:translateX(4px); }
+    30%,50%,70%{ transform:translateX(-6px); }
+    40%,60%{ transform:translateX(6px); }
+  }
+  .lock-box.shake{ animation:shake .45s; }
+</style>
+</head>
+<body>
+
+  <!-- ===== 锁屏 ===== -->
+  <div class="lock-screen show" id="lockScreen">
+    <div class="lock-box" id="lockBox">
+      <div class="lock-icon">🔐</div>
+      <h2 id="lockTitle">请输入密码</h2>
+      <p class="lock-sub" id="lockSub">解锁后即可查看你的记录</p>
+
+      <!-- 当前密码（仅修改密码时显示） -->
+      <div class="lock-field" id="lockOldWrap" hidden>
+        <input id="lockOld" type="password" placeholder="当前密码" autocomplete="current-password" enterkeyhint="done">
+      </div>
+
+      <!-- 安全问题展示（仅重置密码时显示） -->
+      <div class="lock-field" id="lockQuestionWrap" hidden>
+        <div style="font-size:13px; color:var(--sub); text-align:left; margin-bottom:6px; padding:0 4px;">安全问题：</div>
+        <div id="lockQuestionText" style="font-size:15px; font-weight:600; text-align:left; padding:12px; background:var(--primary-soft); border-radius:12px; color:var(--primary); word-break:break-all;"></div>
+      </div>
+
+      <!-- 答案输入（仅重置密码时显示） -->
+      <div class="lock-field" id="lockAnswerWrap" hidden>
+        <input id="lockAnswer" type="text" placeholder="请输入你的答案" autocomplete="off" enterkeyhint="done">
+      </div>
+
+      <!-- 设置密码时显示安全问题输入 -->
+      <div class="lock-field" id="lockQuestionSetWrap" hidden>
+        <input id="lockQuestionSet" type="text" placeholder="设置安全问题（例如：我的小学名称是？）" autocomplete="off">
+      </div>
+      <div class="lock-field" id="lockAnswerSetWrap" hidden>
+        <input id="lockAnswerSet" type="text" placeholder="设置答案（不区分大小写）" autocomplete="off">
+      </div>
+
+      <!-- 新密码 / 密码 -->
+      <div class="lock-field">
+        <input id="lockPwd" type="password" placeholder="密码" autocomplete="current-password" enterkeyhint="done">
+      </div>
+      <!-- 确认密码（设置或重置时显示） -->
+      <div class="lock-field" id="lockConfirmWrap" hidden>
+        <input id="lockPwd2" type="password" placeholder="确认密码" autocomplete="new-password" enterkeyhint="done">
+      </div>
+
+      <div class="lock-error" id="lockError"></div>
+
+      <button class="lock-btn" id="lockBtn" type="button">解锁</button>
+      <button class="lock-link" id="lockForgot" type="button" hidden>忘记密码？</button>
+      <button class="lock-link" id="lockCancel" type="button" hidden>取消</button>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <h1>
+      🔐 我的密码本
+      <span class="count" id="count"></span>
+      <button class="lock-change" id="changePwdBtn" type="button" title="修改访问密码" aria-label="修改访问密码">🔑</button>
+    </h1>
+    <div class="search">
+      <input id="search" type="search" placeholder="搜索名称 / 网址 / 账号" autocomplete="off">
+    </div>
+  </header>
+
+  <main id="list"></main>
+
+  <button class="fab" id="fab" aria-label="新增">＋</button>
+
+  <div class="mask" id="mask"></div>
+
+  <section class="sheet" id="sheet">
+    <div class="grabber"></div>
+    <div class="sheet-head">
+      <span id="sheetTitle">新增记录</span>
+      <button id="closeSheet" aria-label="关闭">✕</button>
+    </div>
+
+    <div class="field">
+      <label>名称</label>
+      <input id="f-title" type="text" placeholder="例如：公司邮箱 / 淘宝" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>网址</label>
+      <input id="f-url" type="text" placeholder="例如：mail.qq.com" autocomplete="off" inputmode="url">
+    </div>
+    <div class="field">
+      <label>账号</label>
+      <input id="f-account" type="text" placeholder="用户名 / 手机号 / 邮箱" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <div class="pw-wrap">
+        <input id="f-password" type="password" placeholder="密码" autocomplete="off">
+        <button class="eye" id="eyeBtn" type="button" aria-label="显示密码">👁</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>备注（可选）</label>
+      <textarea id="f-note" placeholder="密保问题、绑定手机等"></textarea>
+    </div>
+
+    <div class="sheet-btns">
+      <button id="cancelBtn" type="button">取消</button>
+      <button id="saveBtn" type="button">保存</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ============ 基础工具 ============ */
+const $ = (s, r = document) => r.querySelector(s);
+const LS_KEY = 'my_notepad_v1';
+const LOCK_KEY = 'my_notepad_lock_v2'; // 升级版本，支持安全问题
+const SESSION_KEY = 'my_notepad_unlocked';
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function normalizeUrl(u){
+  u = String(u || '').trim();
+  if (!u) return '';
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) return u;
+  return 'https://' + u;
+}
+let toastTimer;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+/* ============ 密码哈希 ============ */
+async function makeHash(pwd, salt){
+  const str = 'nb::' + salt + '::' + pwd;
+  try{
+    if (window.crypto && crypto.subtle && window.TextEncoder){
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  }catch(e){ /* 降级 */ }
+
+  let h1 = 0x811c9dc5 >>> 0;
+  let h2 = 0x9e3779b9 >>> 0;
+  for (let i = 0; i < str.length; i++){
+    const c = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+    h2 = Math.imul(h2 + c + i, 2654435761) >>> 0;
+  }
+  for (let k = 0; k < 1200; k++){
+    h1 = Math.imul(h1 ^ (h2 & 0xff), 16777619) >>> 0;
+    h2 = Math.imul(h2 ^ (h1 & 0xff), 2654435761) >>> 0;
+  }
+  return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+}
+
+function getLock(){
+  try{ return JSON.parse(localStorage.getItem(LOCK_KEY) || 'null'); }
+  catch(e){ return null; }
+}
+function setLock(o){
+  try{ localStorage.setItem(LOCK_KEY, JSON.stringify(o)); }
+  catch(e){ toast('保存失败'); }
+}
+
+/* ============ 锁屏逻辑 ============ */
+let lockMode = 'unlock';
+let unlocked = false;
+let lockBusy = false;
+
+function showLock(mode){
+  lockMode = mode;
+  const ls = $('#lockScreen');
+  ls.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  $('#lockError').textContent = '';
+
+  const lock = getLock();
+
+  // 根据模式控制显示/隐藏
+  $('#lockOldWrap').hidden = (mode !== 'change');
+  $('#lockConfirmWrap').hidden = (mode === 'unlock');
+  
+  // 重置密码时的安全问题展示
+  const isReset = (mode === 'reset');
+  $('#lockQuestionWrap').hidden = !isReset;
+  $('#lockAnswerWrap').hidden = !isReset;
+  if (isReset && lock && lock.securityQuestion) {
+    $('#lockQuestionText').textContent = lock.securityQuestion;
+  }
+
+  // 设置密码时的安全问题输入
+  const isSetup = (mode === 'setup');
+  $('#lockQuestionSetWrap').hidden = !isSetup;
+  $('#lockAnswerSetWrap').hidden = !isSetup;
+
+  // 忘记密码和取消按钮
+  $('#lockForgot').hidden = (mode !== 'unlock' || !lock || !lock.securityQuestion); // 没有设置安全问题就不能用忘记密码
+  $('#lockCancel').hidden = (mode !== 'change' && mode !== 'reset');
+
+  const title = $('#lockTitle'), sub = $('#lockSub'), btn = $('#lockBtn');
+
+  if (mode === 'setup'){
+    title.textContent = '设置访问密码';
+    sub.textContent   = '以后打开需要输入这个密码';
+    btn.textContent   = '设置并进入';
+    $('#lockPwd').placeholder  = '设置密码（至少 4 位）';
+    $('#lockPwd2').placeholder = '再次输入密码';
+  } else if (mode === 'change'){
+    title.textContent = '修改访问密码';
+    sub.textContent   = '需要先验证当前密码';
+    btn.textContent   = '保存新密码';
+    $('#lockPwd').placeholder  = '新密码（至少 4 位）';
+    $('#lockPwd2').placeholder = '再次输入新密码';
+  } else if (mode === 'reset'){
+    title.textContent = '重置访问密码';
+    sub.textContent   = '回答安全问题以重置密码';
+    btn.textContent   = '重置并解锁';
+    $('#lockPwd').placeholder  = '新密码（至少 4 位）';
+    $('#lockPwd2').placeholder = '再次输入新密码';
+  } else {
+    title.textContent = '请输入密码';
+    sub.textContent   = '解锁后即可查看你的记录';
+    btn.textContent   = '解锁';
+    $('#lockPwd').placeholder  = '密码';
+  }
+
+  // 清空输入
+  ['#lockOld', '#lockPwd', '#lockPwd2', '#lockAnswer', '#lockQuestionSet', '#lockAnswerSet'].forEach(sel => {
+    const el = $(sel);
+    if (el) el.value = '';
+  });
+
+  setTimeout(() => {
+    let target = $('#lockPwd');
+    if (mode === 'change') target = $('#lockOld');
+    else if (mode === 'reset') target = $('#lockAnswer');
+    else if (mode === 'setup') target = $('#lockQuestionSet');
+    try{ target.focus({ preventScroll: true }); }catch(e){}
+  }, 320);
+}
+
+function hideLock(){
+  $('#lockScreen').classList.remove('show');
+  if (!$('#sheet').classList.contains('show')){
+    document.body.style.overflow = '';
+  }
+}
+
+function unlockDone(){
+  unlocked = true;
+  try{ sessionStorage.setItem(SESSION_KEY, '1'); }catch(e){}
+  hideLock();
+  render();
+}
+
+function shakeBox(){
+  const box = $('#lockBox');
+  box.classList.remove('shake');
+  void box.offsetWidth;
+  box.classList.add('shake');
+}
+
+async function submitLock(){
+  if (lockBusy) return;
+
+  const err = $('#lockError');
+  err.textContent = '';
+
+  const lock = getLock();
+  const p    = $('#lockPwd').value;
+  const p2   = $('#lockPwd2').value;
+  const oldP = $('#lockOld').value;
+  const answer = $('#lockAnswer').value;
+  const questionSet = $('#lockQuestionSet').value;
+  const answerSet = $('#lockAnswerSet').value;
+
+  const fail = (msg) => { err.textContent = msg; shakeBox(); };
+
+  lockBusy = true;
+  $('#lockBtn').disabled = true;
+
+  try{
+    if (lockMode === 'unlock'){
+      if (!p) return fail('请输入密码');
+      if (!lock) { unlockDone(); return; }
+      const h = await makeHash(p, lock.salt);
+      if (h !== lock.hash) return fail('密码错误，请重试');
+      unlockDone();
+
+    } else if (lockMode === 'setup'){
+      if (p.length < 4) return fail('密码至少 4 位');
+      if (p !== p2)     return fail('两次输入的密码不一致');
+      if (!questionSet.trim()) return fail('请设置安全问题');
+      if (!answerSet.trim())   return fail('请设置安全问题的答案');
+      
+      const salt = uid() + uid();
+      const h = await makeHash(p, salt);
+      const answerSalt = uid() + uid();
+      const answerHash = await makeHash(answerSet.trim().toLowerCase(), answerSalt);
+      
+      setLock({ 
+        salt, hash: h, v: 2,
+        securityQuestion: questionSet.trim(),
+        securityAnswerSalt: answerSalt,
+        securityAnswerHash: answerHash
+      });
+      unlockDone();
+      toast('访问密码已设置');
+
+    } else if (lockMode === 'change'){
+      if (!lock) { hideLock(); return; }
+      const oh = await makeHash(oldP, lock.salt);
+      if (oh !== lock.hash) return fail('当前密码错误');
+      if (p.length < 4)     return fail('新密码至少 4 位');
+      if (p !== p2)         return fail('两次输入的新密码不一致');
+      
+      const salt = uid() + uid();
+      const h = await makeHash(p, salt);
+      setLock({ 
+        ...lock, 
+        salt, 
+        hash: h 
+      });
+      hideLock();
+      toast('访问密码已修改');
+
+    } else if (lockMode === 'reset'){
+      if (!lock || !lock.securityQuestion) return fail('未设置安全问题，无法重置');
+      if (!answer.trim()) return fail('请输入安全问题答案');
+      if (p.length < 4) return fail('新密码至少 4 位');
+      if (p !== p2) return fail('两次输入的新密码不一致');
+
+      // 验证答案（忽略大小写和首尾空格）
+      const ah = await makeHash(answer.trim().toLowerCase(), lock.securityAnswerSalt);
+      if (ah !== lock.securityAnswerHash) return fail('安全问题答案错误');
+
+      // 答案正确，重置密码，保留原有数据
+      const salt = uid() + uid();
+      const h = await makeHash(p, salt);
+      setLock({ 
+        ...lock, 
+        salt, 
+        hash: h 
+        // 保留原有的 securityQuestion 等
+      });
+      unlockDone();
+      toast('密码已重置，数据已保留');
+    }
+  } finally {
+    lockBusy = false;
+    $('#lockBtn').disabled = false;
+  }
+}
+
+/* ============ 数据 ============ */
+let items = [];
+try {
+  const raw = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  items = Array.isArray(raw) ? raw : [];
+} catch (e) { items = []; }
+
+function persist(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(items));
+  } catch (e) {
+    toast('存储失败，可能空间不足');
+  }
+}
+
+/* ============ 渲染 ============ */
+function cardHTML(it){
+  const has = v => v && String(v).trim();
+  return `
+  <div class="card" data-id="${it.id}">
+    <div class="card-head">
+      <div class="title">${esc(it.title) || '未命名'}</div>
+      <div class="ops">
+        <button class="mini ghost" data-act="copy" data-field="all">全部</button>
+        <button class="icon-btn" data-act="edit" aria-label="编辑">✏️</button>
+        <button class="icon-btn" data-act="del" aria-label="删除">🗑️</button>
+      </div>
+    </div>
+
+    ${has(it.url) ? `
+    <div class="row">
+      <span class="k">网址</span>
+      <span class="v">${esc(it.url)}</span>
+      <button class="mini ghost" data-act="open">打开</button>
+      <button class="mini" data-act="copy" data-field="url">复制</button>
+    </div>` : ''}
+
+    ${has(it.account) ? `
+    <div class="row">
+      <span class="k">账号</span>
+      <span class="v">${esc(it.account)}</span>
+      <button class="mini" data-act="copy" data-field="account">复制</button>
+    </div>` : ''}
+
+    ${has(it.password) ? `
+    <div class="row">
+      <span class="k">密码</span>
+      <span class="v pw" data-pw data-shown="0">••••••••</span>
+      <button class="mini ghost" data-act="toggle">👁</button>
+      <button class="mini" data-act="copy" data-field="password">复制</button>
+    </div>` : ''}
+
+    ${has(it.note) ? `
+    <div class="row">
+      <span class="k">备注</span>
+      <span class="v note">${esc(it.note)}</span>
+    </div>` : ''}
+  </div>`;
+}
+
+function render(){
+  if (!unlocked) return;
+
+  const kw = ($('#search').value || '').trim().toLowerCase();
+  const list = $('#list');
+
+  let arr = items.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if (kw) {
+    arr = arr.filter(it =>
+      [it.title, it.url, it.account, it.password, it.note]
+        .map(v => String(v || '').toLowerCase()).join('\n').includes(kw)
+    );
+  }
+
+  $('#count').textContent = items.length ? items.length + ' 条' : '';
+
+  if (!arr.length) {
+    list.innerHTML = items.length
+      ? '<div class="empty">🔍 没有匹配的记录</div>'
+      : '<div class="empty">还没有记录<br><span>点右下角 ＋ 添加第一条吧</span></div>';
+    return;
+  }
+  list.innerHTML = arr.map(cardHTML).join('');
+}
+
+/* ============ 复制 ============ */
+async function copyText(text){
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (!ok) throw new Error('copy failed');
+    }
+    toast('已复制到剪贴板');
+    return true;
+  } catch (e) {
+    toast('复制失败，请长按手动选择');
+    return false;
+  }
+}
+
+function flash(btn){
+  if (btn.dataset.busy) return;
+  btn.dataset.busy = '1';
+  const old = btn.textContent;
+  btn.textContent = '已复制';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = old;
+    btn.classList.remove('copied');
+    delete btn.dataset.busy;
+  }, 1000);
+}
+
+function buildAll(it){
+  const lines = [];
+  if (it.title)    lines.push(it.title);
+  if (it.url)      lines.push('网址：' + normalizeUrl(it.url));
+  if (it.account)  lines.push('账号：' + it.account);
+  if (it.password) lines.push('密码：' + it.password);
+  if (it.note)     lines.push('备注：' + it.note);
+  return lines.join('\n');
+}
+
+/* ============ 列表交互 ============ */
+$('#list').addEventListener('click', async (e) => {
+  const card = e.target.closest('.card');
+  const btn  = e.target.closest('button[data-act]');
+  if (!card || !btn) return;
+
+  const item = items.find(i => i.id === card.dataset.id);
+  if (!item) return;
+
+  const act = btn.dataset.act;
+
+  if (act === 'copy') {
+    const f = btn.dataset.field;
+    let text = '';
+    if (f === 'all')       text = buildAll(item);
+    else if (f === 'url')  text = normalizeUrl(item.url);
+    else                   text = item[f] || '';
+
+    if (!String(text).trim()) return toast('这一项是空的');
+    const ok = await copyText(text);
+    if (ok) flash(btn);
+
+  } else if (act === 'toggle') {
+    const span = card.querySelector('[data-pw]');
+    const shown = span.dataset.shown === '1';
+    if (shown) {
+      span.textContent = '••••••••';
+      span.dataset.shown = '0';
+      btn.textContent = '👁';
+    } else {
+      span.textContent = item.password || '';
+      span.dataset.shown = '1';
+      btn.textContent = '🙈';
+    }
+
+  } else if (act === 'open') {
+    const u = normalizeUrl(item.url);
+    if (u) window.open(u, '_blank', 'noopener');
+
+  } else if (act === 'edit') {
+    openSheet(item);
+
+  } else if (act === 'del') {
+    if (confirm(`确定删除「${item.title || '未命名'}」吗？`)) {
+      items = items.filter(i => i.id !== item.id);
+      persist();
+      render();
+      toast('已删除');
+    }
+  }
+});
+
+/* ============ 表单 ============ */
+const sheet = $('#sheet');
+const mask  = $('#mask');
+let editingId = null;
+
+function openSheet(item){
+  editingId = item ? item.id : null;
+  $('#sheetTitle').textContent = item ? '编辑记录' : '新增记录';
+  $('#f-title').value    = item ? (item.title || '')    : '';
+  $('#f-url').value      = item ? (item.url || '')      : '';
+  $('#f-account').value  = item ? (item.account || '')  : '';
+  $('#f-password').value = item ? (item.password || '') : '';
+  $('#f-note').value     = item ? (item.note || '')     : '';
+  $('#f-password').type = 'password';
+  $('#eyeBtn').textContent = '👁';
+
+  mask.classList.add('show');
+  sheet.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet(){
+  mask.classList.remove('show');
+  sheet.classList.remove('show');
+  document.body.style.overflow = '';
+  editingId = null;
+}
+
+function save(){
+  const data = {
+    title:    $('#f-title').value.trim(),
+    url:      $('#f-url').value.trim(),
+    account:  $('#f-account').value.trim(),
+    password: $('#f-password').value.trim(),
+    note:     $('#f-note').value.trim()
+  };
+
+  if (!data.title && !data.url && !data.account && !data.password && !data.note) {
+    toast('请至少填写一项内容');
+    return;
+  }
+
+  if (editingId) {
+    const it = items.find(i => i.id === editingId);
+    if (it) Object.assign(it, data, { updatedAt: Date.now() });
+  } else {
+    items.push({ id: uid(), ...data, updatedAt: Date.now() });
+  }
+
+  persist();
+  render();
+  closeSheet();
+  toast('已保存');
+}
+
+/* ============ 事件绑定 ============ */
+$('#fab').addEventListener('click', () => openSheet(null));
+$('#mask').addEventListener('click', closeSheet);
+$('#closeSheet').addEventListener('click', closeSheet);
+$('#cancelBtn').addEventListener('click', closeSheet);
+$('#saveBtn').addEventListener('click', save);
+$('#search').addEventListener('input', render);
+
+$('#lockBtn').addEventListener('click', submitLock);
+
+['#lockOld', '#lockPwd', '#lockPwd2', '#lockAnswer', '#lockQuestionSet', '#lockAnswerSet'].forEach(sel => {
+  $(sel).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){ e.preventDefault(); submitLock(); }
+  });
+});
+
+$('#lockCancel').addEventListener('click', () => {
+  hideLock();
+});
+
+// 忘记密码 -> 进入重置模式
+$('#lockForgot').addEventListener('click', () => {
+  const lock = getLock();
+  if (lock && lock.securityQuestion) {
+    showLock('reset');
+  } else {
+    toast('未设置安全问题，无法重置密码');
+  }
+});
+
+$('#changePwdBtn').addEventListener('click', () => {
+  if (!getLock()) { showLock('setup'); return; }
+  showLock('change');
+});
+
+$('#eyeBtn').addEventListener('click', () => {
+  const i = $('#f-password');
+  const show = i.type === 'password';
+  i.type = show ? 'text' : 'password';
+  $('#eyeBtn').textContent = show ? '🙈' : '👁';
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && sheet.classList.contains('show')) closeSheet();
+});
+
+// 多标签页同步
+window.addEventListener('storage', (e) => {
+  if (e.key === LS_KEY) {
+    try {
+      items = JSON.parse(e.newValue || '[]');
+      if (!Array.isArray(items)) items = [];
+      render();
+    } catch (_) {}
+  }
+});
+
+/* ============ 生成 PWA 图标 / manifest ============ */
+(function setupPWA(){
+  try {
+    const S = 192;
+    const c = document.createElement('canvas');
+    c.width = c.height = S;
+    const ctx = c.getContext('2d');
+
+    const rr = (x, y, w, h, r) => {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    };
+
+    const g = ctx.createLinearGradient(0, 0, S, S);
+    g.addColorStop(0, '#6b96ff');
+    g.addColorStop(1, '#3f63e8');
+    ctx.fillStyle = g;
+    rr(0, 0, S, S, 42);
+    ctx.fill();
+
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 13;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(96, 88, 25, Math.PI, 0);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    rr(58, 88, 76, 62, 13);
+    ctx.fill();
+
+    ctx.fillStyle = '#4f7cff';
+    ctx.beginPath();
+    ctx.arc(96, 112, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(92, 114, 8, 18);
+
+    const icon = c.toDataURL('image/png');
+
+    const manifest = {
+      name: '我的密码本',
+      short_name: '密码本',
+      start_url: './',
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#f2f4f9',
+      theme_color: '#4f7cff',
+      icons: [
+        { src: icon, sizes: '192x192', type: 'image/png' },
+        { src: icon, sizes: '512x512', type: 'image/png' }
+      ]
+    };
+
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+
+    const apple = document.createElement('link');
+    apple.rel = 'apple-touch-icon';
+    apple.href = icon;
+    document.head.appendChild(apple);
+
+    const fav = document.createElement('link');
+    fav.rel = 'icon';
+    fav.href = icon;
+    document.head.appendChild(fav);
+  } catch (_) {}
+})();
+
+/* ============ 启动 ============ */
+(function boot(){
+  const lock = getLock();
+  let remembered = false;
+  try{ remembered = sessionStorage.getItem(SESSION_KEY) === '1'; }catch(e){}
+
+  if (!lock){
+    showLock('setup');            // 首次使用：设置访问密码和安全问题
+  } else if (remembered){
+    unlocked = true;
+    hideLock();                   // 同一会话内刷新，无需重复输入
+    render();
+  } else {
+    showLock('unlock');           // 重新打开：需要输入密码
+  }
+})();
+</script>
+</body>
+</html>
